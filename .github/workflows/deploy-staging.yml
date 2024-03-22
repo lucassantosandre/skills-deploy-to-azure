@@ -1,26 +1,32 @@
-name: Stage the application
-
-on:
-  pull_request:
-    types: [labeled]
-
+name: Test Project
+on: [push]
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
-
-    if: contains(github.event.pull_request.labels.*.name, 'stage')
-
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up Node.js
+      - name: Install Node
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
-
+          node-version: '18'
       - name: Install dependencies
         run: npm ci
-
       - name: Run tests
         run: npm test
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout repository 
+        uses: actions/checkout@v2
+      - name: Install Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build project
+        run: npm run build
+      - name: Deploy
+        run: npx vercel --token ${{ secrets.VERCEL_TOKEN }} --prod -y
